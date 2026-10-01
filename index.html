@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Countdown 2026</title>
+<meta name="description" content="Live countdown to October 22, 2026">
+<style>
+  :root {
+    --bg: #05060f;
+    --panel: rgba(255, 255, 255, 0.04);
+    --panel-border: rgba(255, 255, 255, 0.09);
+    --text: #eef1ff;
+    --muted: #8a90b8;
+    --accent: #7c6bff;
+    --accent2: #22d3ee;
+    --glow: rgba(124, 107, 255, 0.45);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas#stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+  .aurora {
+    position: fixed;
+    inset: -20%;
+    z-index: 0;
+    background:
+      radial-gradient(40% 35% at 25% 30%, rgba(124, 107, 255, 0.16), transparent 70%),
+      radial-gradient(35% 30% at 75% 65%, rgba(34, 211, 238, 0.12), transparent 70%),
+      radial-gradient(30% 30% at 60% 20%, rgba(244, 114, 182, 0.08), transparent 70%);
+    animation: drift 24s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from { transform: translate(-2%, -2%) rotate(-2deg) scale(1); }
+    to   { transform: translate(2%, 2%) rotate(2deg) scale(1.08); }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px 16px;
+    width: min(1100px, 100%);
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.45em;
+    font-size: clamp(10px, 1.6vw, 14px);
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 5vw, 54px);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    background: linear-gradient(90deg, #ffffff, var(--accent) 55%, var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+  .target-line {
+    color: var(--muted);
+    font-size: clamp(12px, 1.8vw, 16px);
+    margin-bottom: 34px;
+  }
+  .target-line strong { color: var(--text); font-weight: 600; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 2vw, 20px);
+    max-width: 900px;
+    margin: 0 auto 26px;
+  }
+  .cell {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    padding: clamp(14px, 3vw, 28px) 6px clamp(12px, 2.4vw, 22px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .cell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    pointer-events: none;
+    box-shadow: 0 0 0 0 var(--glow);
+    transition: box-shadow 0.4s;
+  }
+  .cell.tick::after { box-shadow: 0 0 24px -6px var(--glow); }
+  .value {
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(34px, 8vw, 84px);
+    font-weight: 800;
+    line-height: 1;
+    display: block;
+  }
+  .value .digit {
+    display: inline-block;
+    min-width: 0.62em;
+    transition: transform 0.18s, opacity 0.18s;
+  }
+  .value .digit.flip {
+    animation: flip 0.28s cubic-bezier(0.2, 0.7, 0.3, 1.1);
+  }
+  @keyframes flip {
+    0%   { transform: rotateX(90deg) translateY(-8px); opacity: 0; }
+    100% { transform: rotateX(0) translateY(0); opacity: 1; }
+  }
+  .label {
+    display: block;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: clamp(9px, 1.4vw, 13px);
+    color: var(--muted);
+  }
+
+  .millis {
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: clamp(12px, 1.8vw, 16px);
+    margin-bottom: 28px;
+  }
+  .millis span { color: var(--accent2); font-weight: 600; }
+
+  .progress-wrap {
+    max-width: 640px;
+    margin: 0 auto 10px;
+  }
+  .progress-track {
+    height: 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 14px var(--glow);
+    transition: width 1s linear;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: clamp(10px, 1.5vw, 13px);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .facts {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 14px;
+    color: var(--muted);
+    font-size: clamp(11px, 1.6vw, 14px);
+    font-variant-numeric: tabular-nums;
+  }
+  .facts div {
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    border-radius: 99px;
+    padding: 7px 16px;
+  }
+  .facts b { color: var(--text); font-weight: 600; }
+
+  .done h1 { font-size: clamp(34px, 7vw, 76px); }
+  .hidden { display: none !important; }
+
+  @media (max-width: 460px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<canvas id="stars"></canvas>
+
+<main id="app">
+  <p class="eyebrow">Counting down to</p>
+  <h1>October 22, 2026</h1>
+  <p class="target-line">Target: <strong id="target-local"></strong> <span id="tz"></span></p>
+
+  <div class="grid" id="grid">
+    <div class="cell" data-unit="days"><span class="value" id="v-days"></span><span class="label">Days</span></div>
+    <div class="cell" data-unit="hours"><span class="value" id="v-hours"></span><span class="label">Hours</span></div>
+    <div class="cell" data-unit="minutes"><span class="value" id="v-minutes"></span><span class="label">Minutes</span></div>
+    <div class="cell" data-unit="seconds"><span class="value" id="v-seconds"></span><span class="label">Seconds</span></div>
+  </div>
+
+  <p class="millis">+ <span id="v-ms">000</span> ms</p>
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-meta">
+      <span>Oct 1, 2026</span>
+      <span id="pct"></span>
+      <span>Oct 22, 2026</span>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div>Total seconds left: <b id="f-seconds"></b></div>
+    <div>Total hours left: <b id="f-hours"></b></div>
+    <div>Weeks left: <b id="f-weeks"></b></div>
+  </div>
+</main>
+
+<main id="done" class="done hidden">
+  <h1>It's October 22, 2026! 🎉</h1>
+  <p class="target-line">The countdown is complete.</p>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // Target: midnight local time on Oct 22, 2026
+  const TARGET = new Date(2026, 9, 22, 0, 0, 0, 0);
+  // Progress baseline: Oct 1, 2026 (when this countdown went live)
+  const START = new Date(2026, 9, 1, 0, 0, 0, 0);
+
+  const $ = (id) => document.getElementById(id);
+  const pad = (n, w = 2) => String(n).padStart(w, "0");
+
+  // --- header: target in viewer's locale + timezone ---
+  $("target-local").textContent = TARGET.toLocaleString(undefined, {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+  try {
+    $("tz").textContent = "(" + Intl.DateTimeFormat().resolvedOptions().timeZone + ")";
+  } catch (_) {}
+
+  // --- digit rendering with flip animation ---
+  function setDigits(el, str) {
+    if (el.childElementCount !== str.length) {
+      el.innerHTML = "";
+      for (const ch of str) {
+        const s = document.createElement("span");
+        s.className = "digit";
+        s.textContent = ch;
+        el.appendChild(s);
+      }
+      return;
+    }
+    [...el.children].forEach((span, i) => {
+      if (span.textContent !== str[i]) {
+        span.textContent = str[i];
+        span.classList.remove("flip");
+        void span.offsetWidth; // restart animation
+        span.classList.add("flip");
+      }
+    });
+  }
+
+  const cells = document.querySelectorAll(".cell");
+  let lastSecond = null;
+  let finished = false;
+
+  function render() {
+    const now = new Date();
+    let diff = TARGET - now;
+
+    if (diff <= 0) {
+      if (!finished) {
+        finished = true;
+        $("app").classList.add("hidden");
+        $("done").classList.remove("hidden");
+        confettiBurst();
+      }
+      return;
+    }
+
+    const ms = diff % 1000;
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    setDigits($("v-days"), String(days));
+    setDigits($("v-hours"), pad(hours));
+    setDigits($("v-minutes"), pad(minutes));
+    setDigits($("v-seconds"), pad(seconds));
+    $("v-ms").textContent = pad(ms, 3);
+
+    if (totalSeconds !== lastSecond) {
+      lastSecond = totalSeconds;
+      cells.forEach((c) => {
+        c.classList.add("tick");
+        setTimeout(() => c.classList.remove("tick"), 300);
+      });
+      $("f-seconds").textContent = totalSeconds.toLocaleString();
+      $("f-hours").textContent = Math.floor(totalSeconds / 3600).toLocaleString();
+      $("f-weeks").textContent = (days / 7).toFixed(1);
+
+      const pct = Math.min(100, Math.max(0, ((now - START) / (TARGET - START)) * 100));
+      $("bar").style.width = pct.toFixed(3) + "%";
+      $("pct").textContent = pct.toFixed(2) + "% elapsed";
+    }
+
+    document.title = `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)} — Oct 22, 2026`;
+  }
+
+  // --- starfield background ---
+  const canvas = $("stars");
+  const ctx = canvas.getContext("2d");
+  let stars = [];
+
+  function resize() {
+    canvas.width = innerWidth * devicePixelRatio;
+    canvas.height = innerHeight * devicePixelRatio;
+    const count = Math.min(220, Math.floor((innerWidth * innerHeight) / 6000));
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: (Math.random() * 1.3 + 0.3) * devicePixelRatio,
+      tw: Math.random() * Math.PI * 2,
+      sp: 0.4 + Math.random() * 1.2,
+    }));
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      const a = 0.35 + 0.45 * Math.sin(t / 900 * s.sp + s.tw);
+      ctx.globalAlpha = Math.max(0.08, a);
+      ctx.fillStyle = "#cdd3ff";
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // --- confetti for completion ---
+  let confetti = [];
+  function confettiBurst() {
+    const colors = ["#7c6bff", "#22d3ee", "#f472b6", "#facc15", "#ffffff"];
+    confetti = Array.from({ length: 260 }, () => ({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 16 * devicePixelRatio,
+      vy: (Math.random() - 0.9) * 16 * devicePixelRatio,
+      g: 0.25 * devicePixelRatio,
+      size: (Math.random() * 6 + 3) * devicePixelRatio,
+      color: colors[(Math.random() * colors.length) | 0],
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+    }));
+  }
+  function drawConfetti() {
+    confetti = confetti.filter((p) => p.y < canvas.height + 40);
+    for (const p of confetti) {
+      p.x += p.vx; p.y += p.vy; p.vy += p.g; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    }
+  }
+
+  function loop(t) {
+    drawStars(t);
+    if (confetti.length) drawConfetti();
+    render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
