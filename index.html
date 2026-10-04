@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Countdown 2026</title>
-<meta name="description" content="Live countdown to October 22, 2026">
+<title>K &amp; S — October 22, 2026</title>
+<meta name="description" content="Live countdown to the divorce of K &amp; S on October 22, 2026 — and the time since, once the day has passed.">
 <style>
   :root {
     --bg: #05060f;
@@ -199,9 +199,9 @@
 <canvas id="stars"></canvas>
 
 <main id="app">
-  <p class="eyebrow">Counting down to</p>
-  <h1>October 22, 2026</h1>
-  <p class="target-line">Target: <strong id="target-local"></strong> <span id="tz"></span></p>
+  <p class="eyebrow" id="eyebrow">K &amp; S &middot; Divorce Countdown</p>
+  <h1 id="headline">October 22, 2026</h1>
+  <p class="target-line"><span id="target-prefix">The divorce is final on</span> <strong id="target-local"></strong> <span id="tz"></span></p>
 
   <div class="grid" id="grid">
     <div class="cell" data-unit="days"><span class="value" id="v-days"></span><span class="label">Days</span></div>
@@ -222,15 +222,10 @@
   </div>
 
   <div class="facts">
-    <div>Total seconds left: <b id="f-seconds"></b></div>
-    <div>Total hours left: <b id="f-hours"></b></div>
-    <div>Weeks left: <b id="f-weeks"></b></div>
+    <div><span id="fl-days">Total days left:</span> <b id="f-days"></b></div>
+    <div><span id="fl-hours">Total hours left:</span> <b id="f-hours"></b></div>
+    <div><span id="fl-weeks">Weeks left:</span> <b id="f-weeks"></b></div>
   </div>
-</main>
-
-<main id="done" class="done hidden">
-  <h1>It's October 22, 2026! 🎉</h1>
-  <p class="target-line">The countdown is complete.</p>
 </main>
 
 <script>
@@ -278,22 +273,37 @@
 
   const cells = document.querySelectorAll(".cell");
   let lastSecond = null;
-  let finished = false;
+  let mode = null; // "down" (before the divorce) or "up" (after)
+
+  function applyMode(m, liveSwitch) {
+    mode = m;
+    if (m === "down") {
+      $("eyebrow").textContent = "K & S · Divorce Countdown";
+      $("headline").textContent = "October 22, 2026";
+      $("target-prefix").textContent = "The divorce is final on";
+      $("fl-days").textContent = "Total days left:";
+      $("fl-hours").textContent = "Total hours left:";
+      $("fl-weeks").textContent = "Weeks left:";
+    } else {
+      $("eyebrow").textContent = "K & S · Life After";
+      $("headline").textContent = "Divorced since October 22, 2026";
+      $("target-prefix").textContent = "The divorce was finalized on";
+      $("fl-days").textContent = "Total days since:";
+      $("fl-hours").textContent = "Total hours since:";
+      $("fl-weeks").textContent = "Weeks since:";
+      $("bar").style.width = "100%";
+      $("pct").textContent = "Complete — counting up";
+      if (liveSwitch) confettiBurst();
+    }
+  }
 
   function render() {
     const now = new Date();
-    let diff = TARGET - now;
+    const raw = TARGET - now;
+    const wantMode = raw > 0 ? "down" : "up";
+    if (wantMode !== mode) applyMode(wantMode, mode === "down" && wantMode === "up");
 
-    if (diff <= 0) {
-      if (!finished) {
-        finished = true;
-        $("app").classList.add("hidden");
-        $("done").classList.remove("hidden");
-        confettiBurst();
-      }
-      return;
-    }
-
+    const diff = Math.abs(raw);
     const ms = diff % 1000;
     const totalSeconds = Math.floor(diff / 1000);
     const days = Math.floor(totalSeconds / 86400);
@@ -313,16 +323,20 @@
         c.classList.add("tick");
         setTimeout(() => c.classList.remove("tick"), 300);
       });
-      $("f-seconds").textContent = totalSeconds.toLocaleString();
+      $("f-days").textContent = days.toLocaleString();
       $("f-hours").textContent = Math.floor(totalSeconds / 3600).toLocaleString();
       $("f-weeks").textContent = (days / 7).toFixed(1);
 
-      const pct = Math.min(100, Math.max(0, ((now - START) / (TARGET - START)) * 100));
-      $("bar").style.width = pct.toFixed(3) + "%";
-      $("pct").textContent = pct.toFixed(2) + "% elapsed";
+      if (mode === "down") {
+        const pct = Math.min(100, Math.max(0, ((now - START) / (TARGET - START)) * 100));
+        $("bar").style.width = pct.toFixed(3) + "%";
+        $("pct").textContent = pct.toFixed(2) + "% elapsed";
+      }
     }
 
-    document.title = `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)} — Oct 22, 2026`;
+    document.title = mode === "down"
+      ? `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)} — until the divorce`
+      : `+${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)} — since the divorce`;
   }
 
   // --- starfield background ---
