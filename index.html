@@ -186,6 +186,36 @@
   }
   .facts b { color: var(--text); font-weight: 600; }
 
+  .met {
+    margin-top: 30px;
+    display: inline-block;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 16px 28px;
+    backdrop-filter: blur(8px);
+  }
+  .met-label {
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: clamp(9px, 1.3vw, 12px);
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .met-value {
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 700;
+  }
+  .met-value b {
+    font-size: clamp(26px, 4.4vw, 40px);
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .met-value .met-hms { color: var(--muted); font-weight: 600; margin-left: 10px; }
   .goodbye-link {
     display: inline-block;
     margin-top: 34px;
@@ -238,6 +268,12 @@
     <div><span id="fl-weeks">Weeks left:</span> <b id="f-weeks"></b></div>
   </div>
 
+  <div class="met">
+    <p class="met-label">Since K &amp; S met — September 21, 2024 at 18:30</p>
+    <p class="met-value"><b id="met-days"></b> days <span class="met-hms" id="met-hms"></span></p>
+  </div>
+
+  <br>
   <a class="goodbye-link" href="goodbye.html">🔒 Goodbye</a>
 </main>
 
@@ -249,6 +285,8 @@
   const TARGET = new Date(2026, 9, 22, 0, 0, 0, 0);
   // Progress baseline: Oct 1, 2026 (when this countdown went live)
   const START = new Date(2026, 9, 1, 0, 0, 0, 0);
+  // The day K & S met
+  const MET = new Date(2024, 8, 21, 18, 30, 0, 0);
 
   const $ = (id) => document.getElementById(id);
   const pad = (n, w = 2) => String(n).padStart(w, "0");
@@ -345,6 +383,15 @@
         $("bar").style.width = pct.toFixed(3) + "%";
         $("pct").textContent = pct.toFixed(2) + "% elapsed";
       }
+    }
+
+    const metSeconds = Math.floor((now - MET) / 1000);
+    if (metSeconds >= 0) {
+      $("met-days").textContent = Math.floor(metSeconds / 86400).toLocaleString();
+      $("met-hms").textContent =
+        pad(Math.floor((metSeconds % 86400) / 3600)) + ":" +
+        pad(Math.floor((metSeconds % 3600) / 60)) + ":" +
+        pad(metSeconds % 60);
     }
 
     document.title = mode === "down"
